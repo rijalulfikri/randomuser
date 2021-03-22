@@ -23,7 +23,7 @@ class _UserWidgetState extends State<UserWidget> {
     return StreamBuilder<UserResponse>(
       stream: bloc.subject.stream,
       builder: (context, AsyncSnapshot<UserResponse> snapshot) {
-        if (snapshot.hasData) {
+        if (snapshot.hasData && snapshot.data.status != RStatus.loading) {
           if (snapshot.data.error != null && snapshot.data.error.length > 0) {
             return _buildErrorWidget(snapshot.data.error);
           }
@@ -31,13 +31,15 @@ class _UserWidgetState extends State<UserWidget> {
         } else if (snapshot.hasError) {
           return _buildErrorWidget(snapshot.error);
         } else {
-          return _buildLoadingWidget();
+          double progress = snapshot.hasData ? snapshot.data.progress : 0;
+          return _buildLoadingWidget(progress);
         }
       },
     );
   }
 
-  Widget _buildLoadingWidget() {
+  Widget _buildLoadingWidget(double progress) {
+    print(progress);
     return Center(
         child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -47,7 +49,8 @@ class _UserWidgetState extends State<UserWidget> {
         Padding(
           padding: EdgeInsets.only(top: 5),
         ),
-        CircularProgressIndicator(
+        LinearProgressIndicator(
+          value: progress,
           valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
         )
       ],
@@ -96,6 +99,15 @@ class _UserWidgetState extends State<UserWidget> {
           padding: EdgeInsets.only(top: 5),
         ),
         Text(user.location.state, style: Theme.of(context).textTheme.body1),
+        FlatButton(
+          color: Theme.of(context).buttonColor,
+          onPressed: () {
+            setState(() {
+              bloc.getUser();
+            });
+          },
+          child: Text('Reload'),
+        )
       ],
     ));
   }
