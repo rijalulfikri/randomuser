@@ -8,8 +8,18 @@ class UserBloc {
       BehaviorSubject<UserResponse>();
 
   getUser() async {
-    UserResponse response = await _repository.getUser();
-    _subject.sink.add(response);
+    var take = 10;
+    Duration interval = Duration(milliseconds: 100);
+    Stream<double> stream =
+        Stream<double>.periodic(interval, (value) => value / take)
+            .take(take + 1);
+    await for (double i in stream) {
+      var progress = i;
+      final response = UserResponse(results: [], progress: progress);
+      _subject.sink.add(response);
+    }
+
+    _repository.getUser().then((response) => _subject.sink.add(response));
   }
 
   dispose() {
